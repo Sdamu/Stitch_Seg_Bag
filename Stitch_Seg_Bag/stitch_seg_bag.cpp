@@ -71,8 +71,8 @@ int main()
 				}
 				// 将存下来的文件名进行拼接处理
 				Mat stitch_result;
-				// stitch_result = stitch_seg_bag(stitch_filenames_path);
-				// imwrite(save_result_path + stitch_filenames_path[j], stitch_result);
+				stitch_result = stitch_seg_bag(stitch_filenames_path);
+				imwrite(save_result_path + stitch_filenames_path[j], stitch_result);
 				i = j-1;
 				continue;
 			}
@@ -138,10 +138,10 @@ string begin_end_white_condition(Mat Binary_srcImage)
 }
 
 //拼接函数，输入的是待拼接的文件名的容器，输出的是拼接后的图像
-//Mat stitch_seg_bag(vector<string> Stitch_images)
-//{
-//
-//}
+Mat stitch_seg_bag(vector<string> Stitch_images)
+{
+
+}
 
 
 
