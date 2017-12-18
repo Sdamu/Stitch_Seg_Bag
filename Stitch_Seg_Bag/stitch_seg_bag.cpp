@@ -184,53 +184,138 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 
 	// 利用这两个相对位置进行拼接，将这两个位置进行做差计算，求取拼接位置
 	// 用第一张图像的 pos1 减去 第二张图像 的 pos2
-	// 如果这个差值大于0，令第二张图像向下平移相对位移再进行拼接
-	// 如果这个差值小于0，令第二张图像向上平移相对位移再进行拼接
+	// 如果这个差值大于0，令第二张图像向上平移相对位移再进行拼接
+	// 如果这个差值小于0，令第二张图像向下平移相对位移再进行拼接
 	int diff = pos1 - pos2;
 	// 首先求出总宽度
 	int result_width = srcImage1.cols + srcImage2.cols;
 	int result_height = 3000;	// 程序预设值
 	Mat result_Image;
 	result_Image.create(Size(result_width, result_height), CV_8UC3);
-	if (diff >= 0)
+	if (diff <= 0)
 	{
 		// 将第一张图像的最左侧中心与result_Image 最左侧中心进行对齐
 		// 然后再进行拼接操作
 		
 		// 确定高度的开始位置
-		int start_row = 1500 - srcImage1.rows / 2;
+		int start_row_image1 = 1500 - srcImage1.rows / 2;
 		// 首先将第一张图复制到最终图像上
 		for (int i = 0; i < srcImage1.rows; i++)
 		{
 			for (int j = 0; j < srcImage1.cols; j++)
 			{
-				result_Image.at<Vec3b>(start_row + i, j)[0] = srcImage1.at<Vec3b>(i, j)[0];
-				result_Image.at<Vec3b>(start_row + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
-				result_Image.at<Vec3b>(start_row + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[0] = srcImage1.at<Vec3b>(i, j)[0];
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
 			}
 		}
-		// 再讲第二张图像根据相对位移复制到最终图像上
+		// 再将第二张图像根据相对位移复制到最终图像上
+		// 计算第二张图像开始的行
+		int start_row_image2 = 1500 - srcImage1.rows / 2 - abs(diff);
 		for (int i = 0; i < srcImage2.rows; i++)
 		{
 			for (int j = 0; j < srcImage2.cols; j++)
 			{
-
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] = 
+					srcImage2.at<Vec3b>(i, j)[0];
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
+					srcImage2.at<Vec3b>(i, j)[1];
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
+					srcImage2.at<Vec3b>(i, j)[2];
 			}
 		}
 
 	}
 	else
 	{
+		// 将第一张图像的最左侧中心与result_Image 最左侧中心进行对齐
+		// 然后再进行拼接操作
+
+		// 确定高度的开始位置
+		int start_row_image1 = 1500 - srcImage1.rows / 2;
+		// 首先将第一张图复制到最终图像上
+		for (int i = 0; i < srcImage1.rows; i++)
+		{
+			for (int j = 0; j < srcImage1.cols; j++)
+			{
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[0] = srcImage1.at<Vec3b>(i, j)[0];
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
+				result_Image.at<Vec3b>(start_row_image1 + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
+			}
+		}
+		// 再将第二张图像根据相对位移复制到最终图像上
+		// 计算第二张图像开始的行
+		int start_row_image2 = 1500 - srcImage1.rows / 2 + abs(diff);
+		for (int i = 0; i < srcImage2.rows; i++)
+		{
+			for (int j = 0; j < srcImage2.cols; j++)
+			{
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] =
+					srcImage2.at<Vec3b>(i, j)[0];
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
+					srcImage2.at<Vec3b>(i, j)[1];
+				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
+					srcImage2.at<Vec3b>(i, j)[2];
+			}
+		}
 
 	}
 
+	// 在得到最后的返回图像后，需要对最终的结果做一个剪裁操作。
+	// 在这里还是分为两种情况进行讨论，依旧是 diff>0 以及 diff<0 两种情况
+	// 在这里，顺带将空白区域赋值为 白色 (255, 255, 255)
+	if(diff >= 0)
+	{	
+		// 首先确定行开始位置
+		int row_start = 1500 - srcImage1.rows / 2 - abs(diff);
+		// 然后确定行结束位置
+		// 需要比较哪张图像更加靠下一些
+		int row_end = 0;
+		// row_start + srcImage1.rows + abs(diff) 是第一张图像的底部
+		// row_start + srcImage2.rows 是第二张图像的底部
+		if (row_start + srcImage1.rows + abs(diff) >= row_start + srcImage2.rows)
+		{
+			// 这种情况是第一张图象的最下方在最下
+			row_end = row_start + srcImage1.rows + abs(diff);
+			// 对 result_Image 进行裁剪
+			result_Image = result_Image(Rect(0, row_start, result_width, result_height));
+			// 对相应位置进行 填白 处理
+			// 需要填充两个区域，分别是第一张图象上部分和第二张图像的下部分
+			// 使用矩形函数填充第一张图的上面
+			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第二张图的下面
+			rectangle(result_Image, Rect(row_start + srcImage2.rows, srcImage1.cols, srcImage2.cols, abs(diff)), CV_FILLED);
+		}
+		else
+		{
+			row_end = row_start + srcImage2.rows;
+			// 对 result_Image 进行裁剪
+			result_Image = result_Image(Rect(0, row_start, result_width, result_height));
+			// 对相应位置进行填白处理
+			// 需要填充两个区域，分别是第一张图像的上部分和第一张图像的下部分
+			// 使用矩形函数填充第一张图的上面
+			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第一张图的下面
+			rectangle(result_Image, Rect(0,abs(diff)+srcImage1.rows,srcImage1.cols,abs(diff)), CV_FILLED);
+		}
+		
+
+
+
+
+
+
+	}
+	else
+	{
+		
+	}
+
+
+	return result_Image;
 
 
 }
-
-
-
-
 
 
 
