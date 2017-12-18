@@ -1,4 +1,5 @@
 ﻿  stitch_seg_bag.cpp
 f:\appdata\pushi\stitch_seg_bag\stitch_seg_bag\stitch_seg_bag.cpp(26): warning C4101: “dir”: 未引用的局部变量
+cl : 命令行 warning D9028: 最小重新生成失败，正在转换为标准生成
   Stitch_Seg_Bag.vcxproj -> F:\AppData\PuShi\Stitch_Seg_Bag\Debug\Stitch_Seg_Bag.exe
   Stitch_Seg_Bag.vcxproj -> F:\AppData\PuShi\Stitch_Seg_Bag\Debug\Stitch_Seg_Bag.pdb (Partial PDB)

@@ -119,7 +119,7 @@
     <ClCompile Include="stitch_seg_bag.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.md" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

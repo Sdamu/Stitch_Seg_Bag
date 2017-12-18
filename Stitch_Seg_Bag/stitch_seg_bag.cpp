@@ -33,7 +33,7 @@ int main()
 
 	vector<string> stitch_images_names;		// 要拼接的图像名的容器
 	// 遍历每张图像
-	for (size_t i = 4; i < filenames_path.size(); i++)
+	for (size_t i = 35; i < filenames_path.size(); i++)
 	{
 		Mat srcImage = imread(filenames_path[i]);
 		Mat src_Binary = First_Process(srcImage);
@@ -72,7 +72,7 @@ int main()
 				// 将存下来的文件名进行拼接处理
 				Mat stitch_result;
 				stitch_result = stitch_seg_bag(stitch_filenames_path);
-				imwrite(save_result_path + stitch_filenames_path[j], stitch_result);
+				imwrite(save_result_path + stitch_filenames_no_path[0], stitch_result);
 				i = j-1;
 				continue;
 			}
@@ -151,6 +151,9 @@ string begin_end_white_condition(Mat Binary_srcImage)
 // 两张图像的拼接函数
 Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 {
+	Mat binary_temp1, binary_temp2;
+	binary_temp1 = First_Process(srcImage1);
+	binary_temp2 = First_Process(srcImage2);
 	srcImage2 = srcImage2(Rect(1, 0, srcImage2.cols - 1, srcImage2.rows));
 	// 进行灰度化处理
 	Mat grayImage1, grayImage2;
@@ -225,6 +228,43 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			}
 		}
 
+		// 对最终结果进行剪切以及填充部分区域
+
+		// 首先确定行开始位置
+		int row_start = start_row_image2;
+		// 然后确定行结束位置
+		// 需要比较哪张图像更加靠下一些
+		int row_end = 0;
+		// row_start + srcImage1.rows + abs(diff) 是第一张图像的底部
+		// row_start + srcImage2.rows 是第二张图像的底部
+		if (start_row_image1 + srcImage1.rows >= start_row_image2 + srcImage2.rows)
+		{
+			// 这种情况是第一张图象的最下方在最下
+			row_end = start_row_image1 + srcImage1.rows;
+			// 对 result_Image 进行裁剪
+			result_Image = result_Image(Rect(0, row_start, result_width, row_end - row_start));
+			// 对相应位置进行 填白 处理
+			// 需要填充两个区域，分别是第一张图象上部分和第二张图像的下部分
+			// 使用矩形函数填充第一张图的上面
+			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第二张图的下面
+			rectangle(result_Image, Rect(srcImage1.cols, srcImage2.rows, srcImage2.cols, row_end - row_start-srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
+		}
+		else
+		{
+			row_end = row_start + srcImage2.rows;
+			// 对 result_Image 进行裁剪
+			int dst_height = row_end - row_start;
+			result_Image = result_Image(Rect(0, row_start, result_width, dst_height));
+			// 对相应位置进行填白处理
+			// 需要填充两个区域，分别是第一张图像的上部分和第一张图像的下部分
+			// 使用矩形函数填充第一张图的上面
+			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第一张图的下面
+			rectangle(result_Image, Rect(0,abs(diff)+srcImage1.rows,srcImage1.cols,dst_height-abs(diff)-srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
+		}
+
+
 	}
 	else
 	{
@@ -259,57 +299,45 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			}
 		}
 
-	}
 
-	// 在得到最后的返回图像后，需要对最终的结果做一个剪裁操作。
-	// 在这里还是分为两种情况进行讨论，依旧是 diff>0 以及 diff<0 两种情况
-	// 在这里，顺带将空白区域赋值为 白色 (255, 255, 255)
-	if(diff >= 0)
-	{	
+
+		// 下面进行剪切以及填充处理
+
 		// 首先确定行开始位置
-		int row_start = 1500 - srcImage1.rows / 2 - abs(diff);
+		int row_start = start_row_image1;
 		// 然后确定行结束位置
 		// 需要比较哪张图像更加靠下一些
 		int row_end = 0;
-		// row_start + srcImage1.rows + abs(diff) 是第一张图像的底部
-		// row_start + srcImage2.rows 是第二张图像的底部
-		if (row_start + srcImage1.rows + abs(diff) >= row_start + srcImage2.rows)
+		if (start_row_image1 + srcImage1.rows <= start_row_image2 + srcImage2.rows)
 		{
-			// 这种情况是第一张图象的最下方在最下
-			row_end = row_start + srcImage1.rows + abs(diff);
+			// 这种情况是第二张图象的最下方在最下
+			row_end = start_row_image2 + srcImage2.rows;
+			int dst_height = row_end - row_start;
 			// 对 result_Image 进行裁剪
-			result_Image = result_Image(Rect(0, row_start, result_width, result_height));
+			result_Image = result_Image(Rect(0, row_start, result_width, dst_height));
 			// 对相应位置进行 填白 处理
-			// 需要填充两个区域，分别是第一张图象上部分和第二张图像的下部分
-			// 使用矩形函数填充第一张图的上面
-			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
-			// 使用矩形函数填充第二张图的下面
-			rectangle(result_Image, Rect(row_start + srcImage2.rows, srcImage1.cols, srcImage2.cols, abs(diff)), CV_FILLED);
+			// 需要填充两个区域，分别是第一张图象下部分和第二张图像的上部分
+			// 使用矩形函数填充第一张图的下面
+			rectangle(result_Image, Rect(0, srcImage1.rows, srcImage1.cols, dst_height-srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第二张图的上面
+			rectangle(result_Image, Rect(srcImage1.cols, 0, srcImage2.cols, dst_height - srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
 		else
 		{
-			row_end = row_start + srcImage2.rows;
+			row_end = row_start + srcImage1.rows;
+			int dst_height = row_end - row_start;
 			// 对 result_Image 进行裁剪
-			result_Image = result_Image(Rect(0, row_start, result_width, result_height));
+			result_Image = result_Image(Rect(0, row_start, result_width, dst_height));
 			// 对相应位置进行填白处理
-			// 需要填充两个区域，分别是第一张图像的上部分和第一张图像的下部分
-			// 使用矩形函数填充第一张图的上面
-			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
-			// 使用矩形函数填充第一张图的下面
-			rectangle(result_Image, Rect(0,abs(diff)+srcImage1.rows,srcImage1.cols,abs(diff)), CV_FILLED);
+			// 需要填充两个区域，分别是第二张图像的上部分和第二张图像的下部分
+			// 使用矩形函数填充第二张图的上面
+			rectangle(result_Image, Rect(srcImage1.cols, 0, srcImage2.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
+			// 使用矩形函数填充第二张图的下面
+			rectangle(result_Image, Rect(srcImage1.cols,abs(diff)+srcImage2.rows,srcImage2.cols, dst_height-abs(diff)-srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
-		
-
-
-
-
-
 
 	}
-	else
-	{
-		
-	}
+
 
 
 	return result_Image;
