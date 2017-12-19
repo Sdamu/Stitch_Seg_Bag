@@ -77,12 +77,7 @@ int main()
 				continue;
 			}
 		}
-
-
-
-		int a = 0;
 	}
-
 
 	waitKey();
 	return 0;
@@ -263,8 +258,6 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			// 使用矩形函数填充第一张图的下面
 			rectangle(result_Image, Rect(0,abs(diff)+srcImage1.rows,srcImage1.cols,dst_height-abs(diff)-srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
-
-
 	}
 	else
 	{
@@ -298,8 +291,6 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 					srcImage2.at<Vec3b>(i, j)[2];
 			}
 		}
-
-
 
 		// 下面进行剪切以及填充处理
 
@@ -338,11 +329,7 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 
 	}
 
-
-
 	return result_Image;
-
-
 }
 
 
@@ -368,30 +355,3 @@ Mat stitch_seg_bag(vector<string> Stitch_images)
 	}
 	return Temp_Result;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
