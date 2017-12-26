@@ -33,8 +33,11 @@ int main()
 
 	vector<string> stitch_images_names;		// 要拼接的图像名的容器
 	// 遍历每张图像
-	for (size_t i = 35; i < filenames_path.size(); i++)
+	cout << "共有 " << filenames_path.size() << " 张图像" << endl;
+	for (size_t i = 0; i < filenames_path.size(); i++)
 	{
+		cout << "正在处理第 " << i << " 张图像, " ;
+		cout << "已完成 " << float(i *100.0 / 5330.0) << " %" << endl;
 		Mat srcImage = imread(filenames_path[i]);
 		Mat src_Binary = First_Process(srcImage);
 		// 如果最后一列均为255，抛弃这张图像，直接进行下一张
@@ -71,13 +74,25 @@ int main()
 				}
 				// 将存下来的文件名进行拼接处理
 				Mat stitch_result;
-				stitch_result = stitch_seg_bag(stitch_filenames_path);
-				imwrite(save_result_path + stitch_filenames_no_path[0], stitch_result);
-				i = j-1;
+				if (j != i)
+				{
+					stitch_result = stitch_seg_bag(stitch_filenames_path);
+					imwrite(save_result_path + stitch_filenames_no_path[0], stitch_result);
+					i = j - 1;
+				}
+				else
+				{
+					imwrite(save_result_path + filenames_no_path[i], srcImage);
+				}
 				continue;
 			}
 		}
+
+
+
+		int a = 0;
 	}
+
 
 	waitKey();
 	return 0;
@@ -194,34 +209,44 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 	{
 		// 将第一张图像的最左侧中心与result_Image 最左侧中心进行对齐
 		// 然后再进行拼接操作
-		
+
 		// 确定高度的开始位置
 		int start_row_image1 = 1500 - srcImage1.rows / 2;
 		// 首先将第一张图复制到最终图像上
-		for (int i = 0; i < srcImage1.rows; i++)
-		{
-			for (int j = 0; j < srcImage1.cols; j++)
-			{
-				result_Image.at<Vec3b>(start_row_image1 + i, j)[0] = srcImage1.at<Vec3b>(i, j)[0];
-				result_Image.at<Vec3b>(start_row_image1 + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
-				result_Image.at<Vec3b>(start_row_image1 + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
-			}
-		}
+		//for (int i = 0; i < srcImage1.rows; i++)
+		//{
+		//	for (int j = 0; j < srcImage1.cols; j++)
+		//	{
+		//		result_Image.at<Vec3b>(start_row_image1 + i, j)[0] = srcImage1.at<Vec3b>(i, j)[0];
+		//		result_Image.at<Vec3b>(start_row_image1 + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
+		//		result_Image.at<Vec3b>(start_row_image1 + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
+		//	}
+		//}
+		// 首先将第一张图复制到最终的图像上
+		srcImage1.copyTo(result_Image(Rect(0,start_row_image1, srcImage1.cols, srcImage1.rows)));
+
+
+
 		// 再将第二张图像根据相对位移复制到最终图像上
 		// 计算第二张图像开始的行
 		int start_row_image2 = 1500 - srcImage1.rows / 2 - abs(diff);
-		for (int i = 0; i < srcImage2.rows; i++)
-		{
-			for (int j = 0; j < srcImage2.cols; j++)
-			{
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] = 
-					srcImage2.at<Vec3b>(i, j)[0];
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
-					srcImage2.at<Vec3b>(i, j)[1];
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
-					srcImage2.at<Vec3b>(i, j)[2];
-			}
-		}
+		// 使用遍历的方法进行填充（复制）操作
+		//for (int i = 0; i < srcImage2.rows; i++)
+		//{
+		//	for (int j = 0; j < srcImage2.cols; j++)
+		//	{
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] =
+		//			srcImage2.at<Vec3b>(i, j)[0];
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
+		//			srcImage2.at<Vec3b>(i, j)[1];
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
+		//			srcImage2.at<Vec3b>(i, j)[2];
+		//	}
+		//}
+
+		// 直接使用 copyto 语句进行复制
+		srcImage2.copyTo(result_Image(Rect(srcImage1.cols, start_row_image2, srcImage2.cols, srcImage2.rows)));
+
 
 		// 对最终结果进行剪切以及填充部分区域
 
@@ -243,7 +268,7 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			// 使用矩形函数填充第一张图的上面
 			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
 			// 使用矩形函数填充第二张图的下面
-			rectangle(result_Image, Rect(srcImage1.cols, srcImage2.rows, srcImage2.cols, row_end - row_start-srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
+			rectangle(result_Image, Rect(srcImage1.cols, srcImage2.rows, srcImage2.cols, row_end - row_start - srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
 		else
 		{
@@ -256,8 +281,10 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			// 使用矩形函数填充第一张图的上面
 			rectangle(result_Image, Rect(0, 0, srcImage1.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
 			// 使用矩形函数填充第一张图的下面
-			rectangle(result_Image, Rect(0,abs(diff)+srcImage1.rows,srcImage1.cols,dst_height-abs(diff)-srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
+			rectangle(result_Image, Rect(0, abs(diff) + srcImage1.rows, srcImage1.cols, dst_height - abs(diff) - srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
+
+
 	}
 	else
 	{
@@ -266,8 +293,8 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 
 		// 确定高度的开始位置
 		int start_row_image1 = 1500 - srcImage1.rows / 2;
-		// 首先将第一张图复制到最终图像上
-		for (int i = 0; i < srcImage1.rows; i++)
+		// 首先将第一张图复制到最终图像上,采用遍历的方法
+		/*for (int i = 0; i < srcImage1.rows; i++)
 		{
 			for (int j = 0; j < srcImage1.cols; j++)
 			{
@@ -275,22 +302,31 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 				result_Image.at<Vec3b>(start_row_image1 + i, j)[1] = srcImage1.at<Vec3b>(i, j)[1];
 				result_Image.at<Vec3b>(start_row_image1 + i, j)[2] = srcImage1.at<Vec3b>(i, j)[2];
 			}
-		}
+		}*/
+
+		// 直接使用 copyTo 方法进行复制
+		srcImage1.copyTo(result_Image(Rect(0, start_row_image1, srcImage1.cols, srcImage1.rows)));
+
 		// 再将第二张图像根据相对位移复制到最终图像上
 		// 计算第二张图像开始的行
 		int start_row_image2 = 1500 - srcImage1.rows / 2 + abs(diff);
-		for (int i = 0; i < srcImage2.rows; i++)
-		{
-			for (int j = 0; j < srcImage2.cols; j++)
-			{
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] =
-					srcImage2.at<Vec3b>(i, j)[0];
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
-					srcImage2.at<Vec3b>(i, j)[1];
-				result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
-					srcImage2.at<Vec3b>(i, j)[2];
-			}
-		}
+
+		//// 采用遍历的方法进行复制
+		//for (int i = 0; i < srcImage2.rows; i++)
+		//{
+		//	for (int j = 0; j < srcImage2.cols; j++)
+		//	{
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[0] =
+		//			srcImage2.at<Vec3b>(i, j)[0];
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[1] =
+		//			srcImage2.at<Vec3b>(i, j)[1];
+		//		result_Image.at<Vec3b>(start_row_image2 + i, j + srcImage1.cols)[2] =
+		//			srcImage2.at<Vec3b>(i, j)[2];
+		//	}
+		//}
+
+		// 直接采用 copyTo 的方法进行复制
+		srcImage2.copyTo(result_Image(Rect(srcImage1.cols, start_row_image2, srcImage2.cols, srcImage2.rows)));
 
 		// 下面进行剪切以及填充处理
 
@@ -309,7 +345,7 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			// 对相应位置进行 填白 处理
 			// 需要填充两个区域，分别是第一张图象下部分和第二张图像的上部分
 			// 使用矩形函数填充第一张图的下面
-			rectangle(result_Image, Rect(0, srcImage1.rows, srcImage1.cols, dst_height-srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
+			rectangle(result_Image, Rect(0, srcImage1.rows, srcImage1.cols, dst_height - srcImage1.rows), Scalar(255, 255, 255), CV_FILLED);
 			// 使用矩形函数填充第二张图的上面
 			rectangle(result_Image, Rect(srcImage1.cols, 0, srcImage2.cols, dst_height - srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
@@ -324,12 +360,16 @@ Mat Stitch_2_Images(Mat srcImage1, Mat srcImage2)
 			// 使用矩形函数填充第二张图的上面
 			rectangle(result_Image, Rect(srcImage1.cols, 0, srcImage2.cols, abs(diff)), Scalar(255, 255, 255), CV_FILLED);
 			// 使用矩形函数填充第二张图的下面
-			rectangle(result_Image, Rect(srcImage1.cols,abs(diff)+srcImage2.rows,srcImage2.cols, dst_height-abs(diff)-srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
+			rectangle(result_Image, Rect(srcImage1.cols, abs(diff) + srcImage2.rows, srcImage2.cols, dst_height - abs(diff) - srcImage2.rows), Scalar(255, 255, 255), CV_FILLED);
 		}
 
 	}
 
+
+
 	return result_Image;
+
+
 }
 
 
