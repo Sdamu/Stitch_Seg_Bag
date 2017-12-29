@@ -1,4 +1,4 @@
 ﻿  stitch_seg_bag.cpp
-f:\appdata\pushi\stitch_seg_bag\stitch_seg_bag\stitch_seg_bag.cpp(54): warning C4101: “dir”: 未引用的局部变量
+f:\appdata\pushi\stitch_seg_bag\stitch_seg_bag\stitch_seg_bag.cpp(26): warning C4101: “dir”: 未引用的局部变量
   Stitch_Seg_Bag.vcxproj -> F:\AppData\PuShi\Stitch_Seg_Bag\Debug\Stitch_Seg_Bag.exe
   Stitch_Seg_Bag.vcxproj -> F:\AppData\PuShi\Stitch_Seg_Bag\Debug\Stitch_Seg_Bag.pdb (Partial PDB)

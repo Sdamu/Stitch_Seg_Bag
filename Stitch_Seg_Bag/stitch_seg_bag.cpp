@@ -20,8 +20,8 @@ Mat stitch_seg_bag(vector<string> Stitch_images);
 
 int main()
 {
-	string srcImages_path = "F:\\AppData\\PuShi\\Images\\";
-	string save_result_path = "F:\\AppData\\PuShi\\Stitch_Seg_Bag\\Stitch_Seg_Bag\\result_Image\\";
+	string srcImages_path = "F:\\AppData\\PuShi\\Image_data\\To_Stitch\\";
+	string save_result_path = "F:\\AppData\\PuShi\\Image_data\\To_Seg\\";
 
 	Directory dir;
 	vector<string> filenames_path = dir.GetListFiles(srcImages_path, "*.jpg", true);
